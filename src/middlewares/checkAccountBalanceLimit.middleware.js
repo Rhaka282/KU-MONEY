@@ -1,5 +1,5 @@
-import * as subscriptionDatasource from '../datasource/subscription.datasource.js';
-import * as accountDatasource from '../datasource/account.datasource.js';
+import * as subscriptionDatasource from "../datasource/subscription.datasource.js";
+import * as accountDatasource from "../datasource/account.datasource.js";
 
 /**
  * Middleware to check if total balance of all accounts exceeds subscription limit
@@ -12,13 +12,11 @@ export const checkAccountBalanceLimit = async (req, res, next) => {
     const { balance } = req.body; // Balance yang akan ditambahkan/diupdate
 
     // Get active subscription
-    const subscription = await subscriptionDatasource.findActiveSubscriptionByUserId(userId);
+    const subscription =
+      await subscriptionDatasource.findActiveSubscriptionByUserId(userId);
 
     if (!subscription) {
-      return res.status(403).json({
-        message: 'No active subscription found',
-        code: 'NO_SUBSCRIPTION',
-      });
+      return next();
     }
 
     // Get limit from subscription (limitIncomes)
@@ -33,7 +31,10 @@ export const checkAccountBalanceLimit = async (req, res, next) => {
     const accounts = await accountDatasource.findAccountsByUserId(userId);
 
     // Calculate current total balance (sum semua balance account)
-    const currentTotalBalance = accounts.reduce((sum, account) => sum + (account.balance || 0), 0);
+    const currentTotalBalance = accounts.reduce(
+      (sum, account) => sum + (account.balance || 0),
+      0
+    );
 
     // Jika create account baru
     if (!req.params.id) {
@@ -44,7 +45,7 @@ export const checkAccountBalanceLimit = async (req, res, next) => {
       if (newTotalBalance > balanceLimit) {
         return res.status(403).json({
           message: `Total balance limit reached`,
-          code: 'ACCOUNT_BALANCE_LIMIT_REACHED',
+          code: "ACCOUNT_BALANCE_LIMIT_REACHED",
           limit: balanceLimit,
           currentTotalBalance: currentTotalBalance,
           newBalance: newBalance,
@@ -52,13 +53,16 @@ export const checkAccountBalanceLimit = async (req, res, next) => {
           remaining: balanceLimit - currentTotalBalance,
         });
       }
-
     } else {
       // Jika update account yang sudah ada
       // Hanya cek jika balance diubah
       if (balance !== undefined) {
-        const existingAccount = await accountDatasource.findAccountByIdAndUserId(req.params.id, userId);
-        
+        const existingAccount =
+          await accountDatasource.findAccountByIdAndUserId(
+            req.params.id,
+            userId
+          );
+
         if (!existingAccount) {
           // Account tidak ditemukan, biarkan controller handle error
           return next();
@@ -66,7 +70,7 @@ export const checkAccountBalanceLimit = async (req, res, next) => {
 
         const oldBalance = existingAccount.balance || 0;
         const newBalance = balance || 0;
-        
+
         // Jika balance tidak berubah, skip check
         if (oldBalance === newBalance) {
           return next();
@@ -80,7 +84,7 @@ export const checkAccountBalanceLimit = async (req, res, next) => {
         if (newTotalBalance > balanceLimit) {
           return res.status(403).json({
             message: `Total balance limit reached`,
-            code: 'ACCOUNT_BALANCE_LIMIT_REACHED',
+            code: "ACCOUNT_BALANCE_LIMIT_REACHED",
             limit: balanceLimit,
             currentTotalBalance: currentTotalBalance,
             oldBalance: oldBalance,
@@ -94,12 +98,11 @@ export const checkAccountBalanceLimit = async (req, res, next) => {
 
     next();
   } catch (error) {
-    console.error('Check Account Balance Limit Error:', error);
+    console.error("Check Account Balance Limit Error:", error);
     res.status(500).json({
-      message: 'Error checking account balance limit',
-      code: 'INTERNAL_ERROR',
+      message: "Error checking account balance limit",
+      code: "INTERNAL_ERROR",
       error: error.message,
     });
   }
 };
-

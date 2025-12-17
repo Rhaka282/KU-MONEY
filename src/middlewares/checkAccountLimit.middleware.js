@@ -1,5 +1,5 @@
-import * as subscriptionDatasource from '../datasource/subscription.datasource.js';
-import * as accountDatasource from '../datasource/account.datasource.js';
+import * as subscriptionDatasource from "../datasource/subscription.datasource.js";
+import * as accountDatasource from "../datasource/account.datasource.js";
 
 /**
  * Middleware to check if user has reached account limit
@@ -10,13 +10,11 @@ export const checkAccountLimit = async (req, res, next) => {
     const userId = req.user.id;
 
     // Get active subscription
-    const subscription = await subscriptionDatasource.findActiveSubscriptionByUserId(userId);
+    const subscription =
+      await subscriptionDatasource.findActiveSubscriptionByUserId(userId);
 
     if (!subscription) {
-      return res.status(403).json({
-        message: 'No active subscription found',
-        code: 'NO_SUBSCRIPTION',
-      });
+      return next();
     }
 
     // Get limit from subscription
@@ -28,26 +26,27 @@ export const checkAccountLimit = async (req, res, next) => {
     }
 
     // Count current accounts
-    const currentAccountCount = await accountDatasource.countAccountsByUserId(userId);
+    const currentAccountCount = await accountDatasource.countAccountsByUserId(
+      userId
+    );
 
     // Check if user has reached the limit
     if (currentAccountCount >= accountLimit) {
       return res.status(403).json({
         message: `Account limit reached`,
-        code: 'ACCOUNT_LIMIT_REACHED',
+        code: "ACCOUNT_LIMIT_REACHED",
         limit: accountLimit,
         current: currentAccountCount,
       });
     }
-    
+
     next();
   } catch (error) {
-    console.error('Check Account Limit Error:', error);
+    console.error("Check Account Limit Error:", error);
     res.status(500).json({
-      message: 'Error checking account limit',
-      code: 'INTERNAL_ERROR',
+      message: "Error checking account limit",
+      code: "INTERNAL_ERROR",
       error: error.message,
     });
   }
 };
-

@@ -40,4 +40,3 @@ categorySchema.index({ 'createdBy._id': 1, type: 1 });
 const Category = mongoose.model('Category', categorySchema, 'categories');
 
 export default Category;
-

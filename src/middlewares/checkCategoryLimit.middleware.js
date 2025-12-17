@@ -1,5 +1,5 @@
-import * as subscriptionDatasource from '../datasource/subscription.datasource.js';
-import * as categoryDatasource from '../datasource/category.datasource.js';
+import * as subscriptionDatasource from "../datasource/subscription.datasource.js";
+import * as categoryDatasource from "../datasource/category.datasource.js";
 
 /**
  * Middleware to check if user has reached category limit
@@ -10,13 +10,11 @@ export const checkCategoryLimit = async (req, res, next) => {
     const userId = req.user.id;
 
     // Get active subscription
-    const subscription = await subscriptionDatasource.findActiveSubscriptionByUserId(userId);
+    const subscription =
+      await subscriptionDatasource.findActiveSubscriptionByUserId(userId);
 
     if (!subscription) {
-      return res.status(403).json({
-        message: 'No active subscription found',
-        code: 'NO_SUBSCRIPTION',
-      });
+      return next();
     }
 
     // Get limit from subscription
@@ -28,13 +26,14 @@ export const checkCategoryLimit = async (req, res, next) => {
     }
 
     // Count current categories
-    const currentCategoryCount = await categoryDatasource.countCategoriesByUserId(userId);
+    const currentCategoryCount =
+      await categoryDatasource.countCategoriesByUserId(userId);
 
     // Check if user has reached the limit
     if (currentCategoryCount >= categoryLimit) {
       return res.status(403).json({
         message: `Category limit reached`,
-        code: 'CATEGORY_LIMIT_REACHED',
+        code: "CATEGORY_LIMIT_REACHED",
         limit: categoryLimit,
         current: currentCategoryCount,
       });
@@ -42,12 +41,11 @@ export const checkCategoryLimit = async (req, res, next) => {
 
     next();
   } catch (error) {
-    console.error('Check Category Limit Error:', error);
+    console.error("Check Category Limit Error:", error);
     res.status(500).json({
-      message: 'Error checking category limit',
-      code: 'INTERNAL_ERROR',
+      message: "Error checking category limit",
+      code: "INTERNAL_ERROR",
       error: error.message,
     });
   }
 };
-
